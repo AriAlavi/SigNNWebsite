@@ -1,6 +1,6 @@
 # SigNN specific
 secret_info.json
-
+*.pem
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
