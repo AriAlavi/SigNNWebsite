@@ -24,3 +24,7 @@ def register(request):
         'register' : profile_form,
     }
     return render(request, "main/register.html", context)
+
+def upload(request):
+    return render(request, "main/upload.html")
+
