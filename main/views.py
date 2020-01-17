@@ -9,6 +9,7 @@ def register(request):
     #     return redirect('home')
     form = UserCreationForm(request.POST or None)
     context= {
-        'form' : form
+        'form' : form,
+        'register' : "e"
     }
     return render(request, "main/register.html", context)

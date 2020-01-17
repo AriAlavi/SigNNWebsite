@@ -7,6 +7,7 @@
     <form method="post">
         {%csrf_token%}
         {{form|crispy}}
+        {{register|crispy}}
         <div style="width: 100%" class="text-right">
             <button class="button-one" type="submit">Register</button>
         </div>
