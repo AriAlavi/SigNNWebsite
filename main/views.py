@@ -12,3 +12,7 @@ def register(request):
         'form' : form
     }
     return render(request, "main/register.html", context)
+
+def upload(request):
+    return render(request, "main/upload.html")
+
