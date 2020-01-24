@@ -1,6 +1,8 @@
 # SigNN specific
+*/migrations/*.py
 secret_info.json
 *.pem
+static/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
