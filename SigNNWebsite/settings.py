@@ -44,7 +44,7 @@ except:
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', 'ec2-52-53-248-163.us-west-1.compute.amazonaws.com', "52.53.248.163", "signn.live"]
+ALLOWED_HOSTS = ['localhost', 'ec2-52-53-248-163.us-west-1.compute.amazonaws.com', "52.53.248.163", "www.signn.live"]
 
 
 # Application definition
