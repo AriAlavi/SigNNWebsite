@@ -20,7 +20,7 @@
 <ul class="topnav" style="margin-bottom: 10px;">
     {% if not request.user.profile %}
     <li><a  href="{% url 'login' %}">Login</a></li>
-    <li><a  href="{% url 'register' %}">Login</a></li>
+    <li><a  href="{% url 'register' %}">Register</a></li>
     {% else %}
     <li><a href="{% url 'index' %}">Events</a></li>
     <li><a href="{% url 'free' %}">Free time</a></li>
