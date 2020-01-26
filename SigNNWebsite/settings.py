@@ -31,15 +31,31 @@ except PermissionError:
     SECRET_DATA = {}
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
 try:
     SECRET_KEY = SECRET_DATA["SECRET_KEY"]
 except:
     SECRET_KEY = get_random_secret_key()
     SECRET_DATA["SECRET_KEY"] = SECRET_KEY
+
+# .apps.googleusercontent.com.json should be last chars of GOOGLE_SECRETS file
+try:
+    GOOGLE_SECRETS = os.path.join(BASE_DIR, SECRET_DATA["GOOGLE_SECRETS"])
+except:
+    GOOGLE_SECRETS = None
+    if SECRET_FILE:
+        print("WARNING: GOOGLE AUTH WILL NOT WORK")
+
+try:
+    MAIN_URL = SECRET_DATA["MAIN_URL"]
+except:
+    MAIN_URL = "localhost:8000"
+    SECRET_DATA["MAIN_URL"] = MAIN_URL
+
+try:
+    HTTP_OR_HTTPS = SECRET_DATA["HTTP_OR_HTTPS"]
+except:
+    HTTP_OR_HTTPS = "http://"
+    SECRET_DATA["HTTP_OR_HTTPS"] = HTTP_OR_HTTPS
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -95,13 +111,28 @@ WSGI_APPLICATION = 'SigNNWebsite.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
+try:
+    DATABASE = (SECRET_DATA['database'])
+except:
+    DATABASE = {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
-}
+    SECRET_DATA['database'] = DATABASE
 
+DATABASES = {
+    'default' : DATABASE
+}
+# DATABASES = {
+#     'default' : {
+#     'ENGINE' : 'django.db.backends.postgresql',
+#     'NAME' : '',
+#     'USER' : '',
+#     'PASSWORD' : '',
+#     'HOST' : '',
+#     'PORT' : '5432'
+#          }
+# }
 
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
@@ -145,5 +176,5 @@ STATIC_ROOT = os.path.join(BASE_DIR, "static")
 if SECRET_FILE is not None:
     SECRET_FILE.close()
     SECRET_FILE = open(SECRET_FILE_PATH, "w+")
-    json.dump(SECRET_DATA, SECRET_FILE)
+    json.dump(SECRET_DATA, SECRET_FILE,indent=2)
     SECRET_FILE.close()
