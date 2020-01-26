@@ -7,6 +7,12 @@ from main.authorize import authorize
 from main.forms import NewProfileForm
 from main.models import GoogleCreds, Profile
 
+from googleapiclient.discovery import build
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
+from oauth2client.client import flow_from_clientsecrets
+from oauth2client.contrib import xsrfutil
+
 def home(request):
     return render(request, "main/home.html")
 
@@ -32,16 +38,14 @@ def register(request):
 def upload(request):
     return render(request, "main/upload.html")
 
-from googleapiclient.discovery import build
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request
-from oauth2client.client import flow_from_clientsecrets
-from oauth2client.contrib import xsrfutil
 
 
-SCOPES = ['https://www.googleapis.com/auth/drive.file']
+
+
+
 
 if settings.GOOGLE_SECRETS:
+    SCOPES = ('https://www.googleapis.com/auth/drive.file',)
     FLOW = flow_from_clientsecrets(
         settings.GOOGLE_SECRETS,
         scope=SCOPES,
@@ -63,6 +67,9 @@ if settings.GOOGLE_SECRETS:
         url = FLOW.step1_get_authorize_url()
         return HttpResponseRedirect(url)
 
+    def add_drive_terms(request):
+        return render(request, "main/add_drive_confirm.html")
+
     def auth_return(request):
         get_state = bytes(request.GET.get('state'), 'utf8')
         if not xsrfutil.validate_token(settings.SECRET_KEY, get_state, request.user):
@@ -71,11 +78,15 @@ if settings.GOOGLE_SECRETS:
         creds = FLOW.step2_exchange(request.GET.get('code'))
         authorize(creds, ("drive", "v3"))
         cred = GoogleCreds.Initialize(request.user.profile, creds)
+        messages.success(request, "Your Google Drive has been added to our storage pool")
         return HttpResponseRedirect("/")
 else:
     def drivePermission(request):
         messages.error(request, "Google API is not configued for this medium:\n" + settings.GOOGLE_SECRETS_BROKEN_WHY)
         return redirect('home')
     def auth_return(request):
+        messages.error(request, "Google API is not configued for this medium:\n" + settings.GOOGLE_SECRETS_BROKEN_WHY)
+        return redirect('home')
+    def add_drive_terms(request):
         messages.error(request, "Google API is not configued for this medium:\n" + settings.GOOGLE_SECRETS_BROKEN_WHY)
         return redirect('home')

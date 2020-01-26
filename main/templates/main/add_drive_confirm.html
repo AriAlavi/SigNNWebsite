@@ -1,0 +1,39 @@
+{% extends "main/base.html" %}
+{% load static %}
+{% block content %}
+<div class="col-sm-4">
+    <h3>Donate Google Drive Storage</h3>
+    <hr>
+    <h4>By continuing you agree to the following:</h4>
+    <ul>
+        <li>To send a 1 weeks notice to 'neural.signn@gmail.com' before deleting and/or modifying the uploaded files and folders</li>
+        <li>To send a 1 weeks notice to 'neural.signn@gmail.com' before graduating or otherwise losing access to your @ucsb email account</li>
+    </ul>
+    <h4>We conversly will</h4>
+    <ul>
+        <li>Upload no more than 150GB of data <b>daily</b> to your Google Drive</li>
+        <li>Only upload training data for the SigNN Project</li>
+        <li>Stop uploading new data no more than 3 days after your request</li>
+    </ul>
+    
+    <div class="custom-control custom-checkbox">
+        <input type="checkbox" class="custom-control-input" id="checkterms">
+        <label class="custom-control-label" for="checkterms">I agree to send the relevant 1 week notices</label>
+    </div>
+    <form action="{% url 'add_drive' %}">
+        <button class="btn btn-primary" id="addDrive" disabled >Add Google Drive</button>
+    </form>
+</div>
+
+<script>
+$("#checkterms").click(function(e){
+    var me = e.currentTarget;
+    if(me.checked){
+        $("#addDrive")[0].disabled = false;
+    }else{
+        $("#addDrive")[0].disabled = true;
+    }
+    
+})
+</script>
+{% endblock content %}

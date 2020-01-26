@@ -6,4 +6,5 @@ urlpatterns = [
     path('register/', main_views.register, name="register"),
     path('addDrive/', main_views.drivePermission, name="add_drive"),
     path('oauth2callback', main_views.auth_return, name="auth_return"),
+    path('add_drive_terms/', main_views.add_drive_terms, name="add_drive_terms"),
 ]

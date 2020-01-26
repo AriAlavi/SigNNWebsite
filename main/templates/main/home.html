@@ -4,7 +4,7 @@
 hi
 
 {% if request.user.profile.api_allowed and not request.user.profile.googlecreds %}
-<form action="{% url 'add_drive' %}">
+<form action="{% url 'add_drive_terms' %}">
     <button class="btn button-primary">
         Add GDrive to backend
     </button>

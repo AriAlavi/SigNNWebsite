@@ -113,6 +113,8 @@ WSGI_APPLICATION = 'SigNNWebsite.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
+
+
 try:
     DATABASE = (SECRET_DATA['database'])
 except:
@@ -122,19 +124,12 @@ except:
     }
     SECRET_DATA['database'] = DATABASE
 
+if DATABASE['engine'] == "django.db.backends.postgresql":
+    import psycopg2.extensions
+
 DATABASES = {
     'default' : DATABASE
 }
-# DATABASES = {
-#     'default' : {
-#     'ENGINE' : 'django.db.backends.postgresql',
-#     'NAME' : '',
-#     'USER' : '',
-#     'PASSWORD' : '',
-#     'HOST' : '',
-#     'PORT' : '5432'
-#          }
-# }
 
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
