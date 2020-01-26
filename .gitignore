@@ -1,6 +1,6 @@
 # SigNN specific
 */migrations/*.py
-secret_info.json
+*.json
 *.pem
 static/*
 
