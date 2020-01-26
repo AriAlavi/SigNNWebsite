@@ -37,15 +37,13 @@ except:
     SECRET_KEY = get_random_secret_key()
     SECRET_DATA["SECRET_KEY"] = SECRET_KEY
 
-import traceback
 # .apps.googleusercontent.com.json should be last chars of GOOGLE_SECRETS file
 GOOGLE_SECRETS_BROKEN_WHY = "Not detected"
 try:
     GOOGLE_SECRETS = os.path.join(BASE_DIR, SECRET_DATA["GOOGLE_SECRETS"])
 except Exception as e:
-    print("GOOGLE SECRETS EXCEPTION:", e)
     GOOGLE_SECRETS = None
-    GOOGLE_SECRETS_BROKEN_WHY = str(traceback.format_exc().splitlines())
+    GOOGLE_SECRETS_BROKEN_WHY = str(e)
     if SECRET_FILE:
         print("WARNING: GOOGLE AUTH WILL NOT WORK", e)
 
