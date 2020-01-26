@@ -41,33 +41,41 @@ from oauth2client.contrib import xsrfutil
 
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
 
-FLOW = flow_from_clientsecrets(
-    settings.GOOGLE_SECRETS,
-    scope=SCOPES,
-    redirect_uri= settings.HTTP_OR_HTTPS + settings.MAIN_URL + "/oauth2callback",
-    prompt='consent')
+if settings.GOOGLE_SECRETS:
+    FLOW = flow_from_clientsecrets(
+        settings.GOOGLE_SECRETS,
+        scope=SCOPES,
+        redirect_uri= settings.HTTP_OR_HTTPS + settings.MAIN_URL + "/oauth2callback",
+        prompt='consent')
 
-def drivePermission(request):
-    if not request.user.profile.api_allowed:
-        messages.error(request, "You do not have sufficient permissions to add your Google Drive")
-    try:
-        if request.user.profile.googlecreds.getCreds():
-            messages.success(request, "Google creds already in system")
-            return redirect('home')
-    except Exception:
-        pass
+    def drivePermission(request):
+        if not request.user.profile.api_allowed:
+            messages.error(request, "You do not have sufficient permissions to add your Google Drive")
+        try:
+            if request.user.profile.googlecreds.getCreds():
+                messages.success(request, "Google creds already in system")
+                return redirect('home')
+        except Exception:
+            pass
 
-    FLOW.params['state'] = xsrfutil.generate_token(settings.SECRET_KEY,
-                                            request.user)
-    url = FLOW.step1_get_authorize_url()
-    return HttpResponseRedirect(url)
+        FLOW.params['state'] = xsrfutil.generate_token(settings.SECRET_KEY,
+                                                request.user)
+        url = FLOW.step1_get_authorize_url()
+        return HttpResponseRedirect(url)
 
-def auth_return(request):
-    get_state = bytes(request.GET.get('state'), 'utf8')
-    if not xsrfutil.validate_token(settings.SECRET_KEY, get_state, request.user):
-        return HttpResponseBadRequest()
-    
-    creds = FLOW.step2_exchange(request.GET.get('code'))
-    authorize(creds, ("drive", "v3"))
-    cred = GoogleCreds.Initialize(request.user.profile, creds)
-    return HttpResponseRedirect("/")
+    def auth_return(request):
+        get_state = bytes(request.GET.get('state'), 'utf8')
+        if not xsrfutil.validate_token(settings.SECRET_KEY, get_state, request.user):
+            return HttpResponseBadRequest()
+        
+        creds = FLOW.step2_exchange(request.GET.get('code'))
+        authorize(creds, ("drive", "v3"))
+        cred = GoogleCreds.Initialize(request.user.profile, creds)
+        return HttpResponseRedirect("/")
+else:
+    def drivePermission(request):
+        messages.error(request, "Google API is not configued for this medium")
+        return redirect('home')
+    def auth_return(request):
+        messages.error(request, "Google API is not configued for this medium")
+        return redirect('home')
