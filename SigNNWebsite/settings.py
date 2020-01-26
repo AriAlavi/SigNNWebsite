@@ -124,7 +124,7 @@ except:
     }
     SECRET_DATA['database'] = DATABASE
 
-if DATABASE['engine'] == "django.db.backends.postgresql":
+if DATABASE['ENGINE'] == "django.db.backends.postgresql":
     import psycopg2.extensions
 
 DATABASES = {
