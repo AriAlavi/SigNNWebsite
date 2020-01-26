@@ -74,8 +74,8 @@ if settings.GOOGLE_SECRETS:
         return HttpResponseRedirect("/")
 else:
     def drivePermission(request):
-        messages.error(request, "Google API is not configued for this medium")
+        messages.error(request, "Google API is not configued for this medium:\n" + settings.GOOGLE_SECRETS_BROKEN_WHY)
         return redirect('home')
     def auth_return(request):
-        messages.error(request, "Google API is not configued for this medium")
+        messages.error(request, "Google API is not configued for this medium:\n" + settings.GOOGLE_SECRETS_BROKEN_WHY)
         return redirect('home')

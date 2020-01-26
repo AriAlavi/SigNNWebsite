@@ -40,9 +40,10 @@ except:
 # .apps.googleusercontent.com.json should be last chars of GOOGLE_SECRETS file
 try:
     GOOGLE_SECRETS = os.path.join(BASE_DIR, SECRET_DATA["GOOGLE_SECRETS"])
-except:
+except Exception as e:
     GOOGLE_SECRETS = None
     if SECRET_FILE:
+        GOOGLE_SECRETS_BROKEN_WHY = str(e)
         print("WARNING: GOOGLE AUTH WILL NOT WORK")
 
 try:
