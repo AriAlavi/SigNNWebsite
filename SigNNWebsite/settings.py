@@ -42,10 +42,11 @@ GOOGLE_SECRETS_BROKEN_WHY = "Not detected"
 try:
     GOOGLE_SECRETS = os.path.join(BASE_DIR, SECRET_DATA["GOOGLE_SECRETS"])
 except Exception as e:
+    print("GOOGLE SECRETS EXCEPTION:", e)
     GOOGLE_SECRETS = None
     GOOGLE_SECRETS_BROKEN_WHY = str(e)
     if SECRET_FILE:
-        print("WARNING: GOOGLE AUTH WILL NOT WORK")
+        print("WARNING: GOOGLE AUTH WILL NOT WORK", e)
 
 try:
     MAIN_URL = SECRET_DATA["MAIN_URL"]
