@@ -38,6 +38,7 @@ except:
     SECRET_DATA["SECRET_KEY"] = SECRET_KEY
 
 # .apps.googleusercontent.com.json should be last chars of GOOGLE_SECRETS file
+GOOGLE_SECRETS_BROKEN_WHY = None
 try:
     GOOGLE_SECRETS = os.path.join(BASE_DIR, SECRET_DATA["GOOGLE_SECRETS"])
 except Exception as e:
