@@ -26,6 +26,14 @@
     {% endif %}
 </ul>
 </header>
+
+<body>
+<div id="container">
+	<video autoplay="true" id="videoElement">
+	</video>
+</div>
+</body>
+
 {% if messages %}
 <ul class="messages">
     {% for message in messages %}
@@ -37,6 +45,5 @@
 {% endif %}
 <div style="padding: 0% 5% 0% 5%">
     {% block content %}
+    {% endblock content %}
 </div>
-
-{% endblock content %}
