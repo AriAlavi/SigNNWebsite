@@ -59,6 +59,14 @@ except:
     HTTP_OR_HTTPS = "http://"
     SECRET_DATA["HTTP_OR_HTTPS"] = HTTP_OR_HTTPS
 
+
+def build_url(self, *args):
+    url = HTTP_OR_HTTPS + MAIN_URL + "/"
+    for arg in args:
+        url += arg + "/"
+    return url
+
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 

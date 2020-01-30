@@ -14,12 +14,16 @@ from oauth2client.client import flow_from_clientsecrets
 from oauth2client.contrib import xsrfutil
 
 def home(request):
-    form = NewFileForm(request.POST or None)
-    if request.POST or form.is_valid():
-        e = TempLocalFile.InititalizeForm(form)
-        print("RESULT:", e)
-        messages.success(request, "File uploaded")
-        return redirect("home")
+    if request.POST:
+        form = NewFileForm(request.POST, request.FILES)
+        if form.is_valid():
+            e = TempLocalFile.InititalizeForm(form, request.user.profile)
+            print("RESULT:", e)
+            messages.success(request, "File uploaded")
+            return redirect("home")
+    else:
+        form = NewFileForm()
+
     context = {
         'test_form' : form
     }

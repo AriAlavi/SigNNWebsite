@@ -2,10 +2,12 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.dispatch import receiver
 from django.db.models.signals import pre_delete
-from apiclient.http import MediaFileUpload
+from django.conf import settings
+from apiclient.http import MediaFileUpload, MediaIoBaseDownload
 
 from httplib2 import Http
 import os
+import uuid
 import jsonpickle
 
 class Profile(models.Model):
@@ -83,10 +85,21 @@ class GoogleCreds(models.Model):
         return str(self.profile)
 
 
-class TempLocalFile(models.Model):
+
+class DynamicFile(models.Model):
+    def getURL(self):
+        return self.url
+    class Meta:
+        abstract = True
+
+class TempLocalFile(DynamicFile):
     name = models.CharField(max_length=99)
     file = models.FileField(upload_to='temp_local/', unique=True)
     uploaded_by = models.ForeignKey(Profile, on_delete=models.SET_NULL, null=True)
+
+
+    def getURL(self):
+        return settings.build_url(file)
 
     @staticmethod
     def Initialize(name, pythonFile, uploader):
@@ -96,32 +109,27 @@ class TempLocalFile(models.Model):
         this = TempLocalFile(name=name, uploaded_by=uploader)
         this.file.name = pythonFile
         this.save()
-
-
-        image = DriveImage.InitializeWithPreDrive(this, relatedObject)
-        this.delete()
-        return image
+        return this
     
     def __str__(self):
         return self.file.path
 
     @staticmethod
-    def InititalizeForm(givenForm):
+    def InititalizeForm(givenForm, uploader):
         from main.forms import NewFileForm
         from main.models import GoogleFile
         assert isinstance(givenForm, NewFileForm)
+        assert isinstance(uploader, Profile)
         try:
             result = givenForm.save()
         except Exception as e:
             return "Uploaded file is corrupted. Please try another. Details: {}".format(e)
-        file = GoogleFile.InitializeTempFile(result, givenForm.name, givenForm.profile)
-        result.delete()
-        return file
+        return result
 
 @receiver(pre_delete)
 def TempFileDeleteSignal(**kwargs):
     instance = kwargs.get("instance", None)
-    if not(instance) or not(isinstance(instance, TempLocalFile)):
+    if not isinstance(instance, TempLocalFile):
         return None
     try:
         os.remove(instance.file.path)
@@ -129,8 +137,11 @@ def TempFileDeleteSignal(**kwargs):
         print("Failed to delete temp local file! Reason:", e)
         
 
-class GoogleFile(models.Model):
-    owned_by = models.ForeignKey(Profile, null=True, on_delete=models.SET_NULL)
+class GoogleFile(DynamicFile):
+    owned_by = models.ForeignKey(Profile, null=True, on_delete=models.SET_NULL, related_name="owner")
+    uploaded_by = models.ForeignKey(Profile, null=True, on_delete=models.SET_NULL, related_name="uploader")
+    name = models.CharField(max_length=99)
+    extension = models.CharField(max_length=7)
     gid = models.CharField(max_length=499)
     url = models.URLField()
     
@@ -138,40 +149,69 @@ class GoogleFile(models.Model):
         return self.url
 
     @staticmethod
-    def InitializeMedia(owner, media, tag=None):
-        assert isinstance(owner, Profile)
+    def InitializeMedia(file_owner, media, name, extension, uploaded_file ,tag=None):
+        assert isinstance(file_owner, Profile)
         assert isinstance(media, MediaFileUpload)
-        drive_service = self.owned_by.googlecreds.getDrive()
+        drive_service = file_owner.googlecreds.getDrive()
         assert drive_service, "Profile has no associated crednetials"
         metadata = {
             'name' : name,
             'uploadType' : "media",
-            "parents" : [owner.getFolder(),]
+            "parents" : [file_owner.getFolder(),]
         }
         filedata = drive_service.files().create(
             body=metadata, media_body=media, fields='id,webViewLink'
         ).execute()
-        googlefile = GoogleFile(owned_by=owner, gid = filedata['id'], url='webViewLink')
+        googlefile = GoogleFile(owned_by=file_owner, gid = filedata['id'], url=filedata['webViewLink'], name=name, uploaded_by=uploaded_file)
         googlefile.save()
         return googlefile
 
     @staticmethod
-    def InitializeTempFile(preDrive, tag, uploader):
+    def InitializeTempFile(preDrive, uploader, tag=None):
         assert isinstance(preDrive, TempLocalFile)
         name = preDrive.name
         path = preDrive.file.path
         extension = os.path.splitext(path)[1]
         assert isinstance(uploader, Profile)
         assert os.path.isfile(path)
-        assert isinstance(name, str)
-
+        
         media = MediaFileUpload(path)
-        drive = DriveImage.InitializeMedia(uploader, media, tag)
+        drive = GoogleFile.InitializeMedia(uploader, media, name, extension, tag)
         drive.save()
         preDrive.delete()
         return drive
 
-    def delete(self):
+    def download_and_delete(self):
+        DOWNLOAD_LOCATION = os.path.join(settings.MEDIA_ROOT, "temp_local")
+        DOWNLOAD_LOCATION = os.path.join(DOWNLOAD_LOCATION, str(uuid.uuid4()) + self.extension)
+        drive_service = self.owned_by.googlecreds.getDrive()
+        request = drive_service.files().get_media(fileId=self.gid)
+        # fh = io.BytesIO()
+        fh = open(DOWNLOAD_LOCATION, "wb")
+        downloader = MediaIoBaseDownload(fh, request)
+        done = False
+        while done is False:
+            status, done = downloader.next_chunk()
+            print("Download {}%".format(int(status.progress() * 100)))
+
+        fh.close()
+        local = TempLocalFile(name=self.name, file=DOWNLOAD_LOCATION, uploaded_by=self.uploaded_by)
+        self.delete()
+        return local
+
+
+
+    def delete_google(self):
         drive_service = self.owned_by.googlecreds.getDrive()
         drive_service.files().delete(fileId=self.gid).execute()
-        super().delete(self)
+
+@receiver(pre_delete)
+def GoogleFileDeleteSignal(**kwargs):
+    instance = kwargs.get("instance", None)
+    if not(instance) or not(isinstance(instance, GoogleFile)):
+        return None
+    try:
+        instance.delete_google()
+    except Exception as e:
+        print("Failed to delete temp local file! Reason:", e)
+        
