@@ -2,7 +2,17 @@
 {% load static %}
 
 {% block content %}
-hi
+
+<body>
+<div id="container">
+	<video autoplay="true" id="videoElement"></video>
+	<video id="myVideo" playsinline class="video-js vjs-default-skin"></video>
+</div>
+</body>
+
+<script src="{% static 'main/camera.js' %}"></script>
+
+<script src="{% static 'main/videojs-control.js' %}"></script>
 
 <script src="{% static 'main/camera.js' %}"></script>
 
