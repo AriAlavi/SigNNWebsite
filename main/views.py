@@ -4,8 +4,8 @@ from django.contrib.auth.forms import UserCreationForm
 from django.conf import settings
 from main.authorize import authorize
 
-from main.forms import NewProfileForm
-from main.models import GoogleCreds, Profile
+from main.forms import NewProfileForm, NewFileForm
+from main.models import GoogleCreds, Profile, TempLocalFile
 
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -14,7 +14,16 @@ from oauth2client.client import flow_from_clientsecrets
 from oauth2client.contrib import xsrfutil
 
 def home(request):
-    return render(request, "main/home.html")
+    form = NewFileForm(request.POST or None)
+    if request.POST or form.is_valid():
+        e = TempLocalFile.InititalizeForm(form)
+        print("RESULT:", e)
+        messages.success(request, "File uploaded")
+        return redirect("home")
+    context = {
+        'test_form' : form
+    }
+    return render(request, "main/home.html", context)
 
 def register(request):
     # if request.user.profile:

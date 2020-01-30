@@ -170,6 +170,9 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
 if SECRET_FILE is not None:
     SECRET_FILE.close()
     SECRET_FILE = open(SECRET_FILE_PATH, "w+")

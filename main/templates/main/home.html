@@ -10,5 +10,13 @@ hi
     </button>
 </form>
 {% endif %}
+<form method="post">
+    {{test_form}}
+    {% csrf_token %}
+    <button class="btn btn-success" type="submit">
+        Submit
+    </button>
+</form>
+
 
 {% endblock content %}
