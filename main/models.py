@@ -5,6 +5,8 @@ from django.db.models.signals import pre_delete
 from django.conf import settings
 from apiclient.http import MediaFileUpload, MediaIoBaseDownload
 
+from main.lib import build_url
+
 from httplib2 import Http
 import os
 import uuid
@@ -99,7 +101,7 @@ class TempLocalFile(DynamicFile):
 
 
     def getURL(self):
-        return settings.build_url(file)
+        return build_url(self.file.name)
 
     @staticmethod
     def Initialize(name, pythonFile, uploader):
@@ -174,7 +176,7 @@ class GoogleFile(DynamicFile):
         extension = os.path.splitext(path)[1]
         assert isinstance(uploader, Profile)
         assert os.path.isfile(path)
-        
+
         media = MediaFileUpload(path)
         drive = GoogleFile.InitializeMedia(uploader, media, name, extension, tag)
         drive.save()

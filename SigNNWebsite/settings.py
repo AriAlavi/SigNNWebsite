@@ -60,11 +60,6 @@ except:
     SECRET_DATA["HTTP_OR_HTTPS"] = HTTP_OR_HTTPS
 
 
-def build_url(self, *args):
-    url = HTTP_OR_HTTPS + MAIN_URL + "/"
-    for arg in args:
-        url += arg + "/"
-    return url
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -186,3 +181,4 @@ if SECRET_FILE is not None:
     SECRET_FILE = open(SECRET_FILE_PATH, "w+")
     json.dump(SECRET_DATA, SECRET_FILE,indent=2)
     SECRET_FILE.close()
+
