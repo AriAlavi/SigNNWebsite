@@ -16,6 +16,8 @@ class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     email = models.EmailField()
     api_allowed = models.BooleanField(default=False)
+    view_allowed = models.BooleanField(default=False)
+    
     folder = models.CharField(max_length=499, null=True, blank=True)
     def __str__(self):
         return str(self.user)

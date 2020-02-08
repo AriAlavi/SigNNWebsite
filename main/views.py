@@ -13,6 +13,12 @@ from google.auth.transport.requests import Request
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.contrib import xsrfutil
 
+def profile(request):
+    context = {
+        "profile" : request.user.profile
+    }
+    return render(request, "main/profile.html", context)
+
 def home(request):
     if request.POST:
         form = NewFileForm(request.POST, request.FILES)
@@ -39,6 +45,8 @@ def register(request):
         profile = profile_form.save(commit=False)
         profile.user = user
         user.email = profile.email
+        if "@ucsb.edu" in profile.email:
+            profile.view_allowed = True
         user.save()
         profile.save()
         return redirect('home')
