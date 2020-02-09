@@ -13,15 +13,29 @@ from google.auth.transport.requests import Request
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.contrib import xsrfutil
 
+def profiles(request):
+    if not request.user.profile.verify_allowed:
+        return redirect("profile")
+    
+    profile_stats = []
+    for profile in Profile.objects.all():
+        stats = profile.upload_stats
+        stats["profile"] = profile
+        profile_stats.append(stats)
+
+    context = {
+        "stats" : profile_stats
+    }
+
+
+    return render(request, "main/profiles.html", context)
+
+
 def profile(request):
     profile = request.user.profile
-    context = {
-        "profile" : profile,
-        "total_uploads" : GoogleFile.objects.filter(uploaded_by=profile).count() + TempLocalFile.objects.filter(uploaded_by=profile).count() + profile.uploads_denied,
-        "approved_uploads" : GoogleFile.objects.filter(uploaded_by=profile).filter(approved=True).count(),
-        "denied_uploads" : profile.uploads_denied,
-        "total_hosting" : GoogleFile.objects.filter(owned_by=profile).count(),
-    }
+    context = profile.upload_stats
+    context['profile'] = profile
+
     return render(request, "main/profile.html", context)
 
 def home(request):
@@ -41,6 +55,8 @@ def home(request):
     return render(request, "main/home.html", context)
 
 def view_image(request, id):
+    if not request.user.profile.view_allowed:
+        return redirect("profile")
     try:
         image = GoogleFile.objects.get(id=id)
     except:

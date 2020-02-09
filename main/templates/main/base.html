@@ -23,6 +23,9 @@
     <li><a  href="{% url 'register' %}">Register</a></li>
     {% else %}
     <li><a href="{% url 'profile' %}">Profile</a></li>
+    {% if request.user.profile.verify_allowed %}
+    <li><a href="{% url 'profiles' %}">Profiles</a></li>
+    {% endif %}
     <li><a href="{% url 'logout' %}">Logout</a></li>
     {% endif %}
 </ul>

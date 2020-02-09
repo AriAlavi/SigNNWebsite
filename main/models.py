@@ -15,11 +15,15 @@ import jsonpickle
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     email = models.EmailField()
+    verify_allowed = models.BooleanField(default=False)
     api_allowed = models.BooleanField(default=False)
     view_allowed = models.BooleanField(default=False)
     uploads_denied = models.PositiveSmallIntegerField(default=0)
 
     folder = models.CharField(max_length=499, null=True, blank=True)
+
+    verification_approvals = models.PositiveSmallIntegerField(default=0)
+    verification_denials = models.PositiveSmallIntegerField(default=0)
 
     def __str__(self):
         return str(self.user)
@@ -29,6 +33,26 @@ class Profile(models.Model):
             return self.folder
 
         return self.googlecreds.createFolder()
+
+    @property
+    def total_uploads(self):
+        return GoogleFile.objects.filter(uploaded_by=self).count() + TempLocalFile.objects.filter(uploaded_by=self).count() + self.uploads_denied
+    @property
+    def approved_uploads(self):
+        return GoogleFile.objects.filter(uploaded_by=self).filter(approved=True).count()
+    @property
+    def total_hosting(self):
+        return GoogleFile.objects.filter(owned_by=self).count()
+
+    @property
+    def upload_stats(self):
+        return {
+        "total_uploads" : self.total_uploads,
+        "approved_uploads" : self.approved_uploads,
+        "denied_uploads" : self.uploads_denied,
+        "total_hosting" : self.total_hosting,
+        }
+
         
     @property
     def unauthorized_file_holder(self):
