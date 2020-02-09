@@ -141,6 +141,8 @@ class TrainingWord(models.Model):
     name = models.CharField(unique=True, max_length=63)
     readonly_fields=('name',)
 
+    def __str__(self):
+        return self.name
 
 
 class DynamicFile(models.Model):
@@ -154,6 +156,7 @@ class DynamicFile(models.Model):
 class TempLocalFile(DynamicFile):
     name = models.CharField(max_length=99)
     file = models.FileField(upload_to='temp_local/', unique=True)
+    training = models.ForeignKey(TrainingWord, on_delete=models.CASCADE)
     uploaded_by = models.ForeignKey(Profile, on_delete=models.SET_NULL, null=True)
 
 
@@ -201,6 +204,7 @@ def TempFileDeleteSignal(**kwargs):
 class GoogleFile(DynamicFile):
     owned_by = models.ForeignKey(Profile, null=True, on_delete=models.SET_NULL, related_name="owner") # Owner is the person who's drive is hosting the file
     uploaded_by = models.ForeignKey(Profile, null=True, on_delete=models.SET_NULL, related_name="uploader") # Uploader is the person who contributed the file to the server
+    training = models.ForeignKey(TrainingWord, on_delete=models.CASCADE)
     name = models.CharField(max_length=99)
     extension = models.CharField(max_length=7)
     gid = models.CharField(max_length=499)
@@ -216,7 +220,7 @@ class GoogleFile(DynamicFile):
         return self.url
 
     @staticmethod
-    def InitializeMedia(file_owner, media, name, extension, uploaded_file ,tag=None):
+    def InitializeMedia(file_owner, media, name, extension, uploaded_file, training, tag=None):
         assert isinstance(file_owner, Profile)
         assert isinstance(media, MediaFileUpload)
         drive_service = file_owner.googlecreds.getDrive()
@@ -233,7 +237,7 @@ class GoogleFile(DynamicFile):
             'type' : 'anyone',
             'role' : 'reader'
         }
-        googlefile = GoogleFile(owned_by=file_owner, gid = filedata['id'], name=name, uploaded_by=uploaded_file)
+        googlefile = GoogleFile(owned_by=file_owner, gid = filedata['id'], name=name, uploaded_by=uploaded_file, training=training)
         drive_service.permissions().create(fileId=filedata['id'], body=permission, fields='').execute()
         googlefile.save()
         return googlefile
@@ -248,7 +252,7 @@ class GoogleFile(DynamicFile):
         assert os.path.isfile(path)
 
         media = MediaFileUpload(path)
-        drive = GoogleFile.InitializeMedia(owner, media, name, extension, preDrive.uploaded_by, tag)
+        drive = GoogleFile.InitializeMedia(owner, media, name, extension, preDrive.uploaded_by, preDrive.training, tag)
         drive.save()
         preDrive.delete()
         return drive
