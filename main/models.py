@@ -17,7 +17,7 @@ class Profile(models.Model):
     email = models.EmailField()
     api_allowed = models.BooleanField(default=False)
     view_allowed = models.BooleanField(default=False)
-    
+
     folder = models.CharField(max_length=499, null=True, blank=True)
     def __str__(self):
         return str(self.user)
@@ -28,6 +28,20 @@ class Profile(models.Model):
 
         return self.googlecreds.createFolder()
         
+    @property
+    def unauthorized_file_holder(self):
+        if self.api_allowed:
+            return False
+        if GoogleFile.objects.filter(owned_by=self).count() > 0:
+            return True
+        return False
+
+    @property
+    def ucsb_account(self):
+        if self.email.split("@")[-1] == "ucsb.edu":
+            return True
+        return False
+
 
         
 
@@ -91,6 +105,8 @@ class GoogleCreds(models.Model):
 
 
 class DynamicFile(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, unique=True)
+    readonly_fields=('id',)
     def getURL(self):
         return self.url
     class Meta:
@@ -142,13 +158,17 @@ def TempFileDeleteSignal(**kwargs):
         
 
 class GoogleFile(DynamicFile):
-    owned_by = models.ForeignKey(Profile, null=True, on_delete=models.SET_NULL, related_name="owner")
-    uploaded_by = models.ForeignKey(Profile, null=True, on_delete=models.SET_NULL, related_name="uploader")
+    owned_by = models.ForeignKey(Profile, null=True, on_delete=models.SET_NULL, related_name="owner") # Owner is the person who's drive is hosting the file
+    uploaded_by = models.ForeignKey(Profile, null=True, on_delete=models.SET_NULL, related_name="uploader") # Uploader is the person who contributed the file to the server
     name = models.CharField(max_length=99)
     extension = models.CharField(max_length=7)
     gid = models.CharField(max_length=499)
-    url = models.URLField()
     
+    @property
+    def url(self):
+        # https://drive.google.com/file/d/1HXVYuK8yL9Ve1NBreXcTtCY0dmPEWSFy/view
+        return "https://drive.google.com/file/d/" + self.gid + "/view"
+
     def __str__(self):
         return self.url
 
@@ -166,7 +186,12 @@ class GoogleFile(DynamicFile):
         filedata = drive_service.files().create(
             body=metadata, media_body=media, fields='id,webViewLink'
         ).execute()
-        googlefile = GoogleFile(owned_by=file_owner, gid = filedata['id'], url=filedata['webViewLink'], name=name, uploaded_by=uploaded_file)
+        permission = {
+            'type' : 'anyone',
+            'role' : 'reader'
+        }
+        googlefile = GoogleFile(owned_by=file_owner, gid = filedata['id'], name=name, uploaded_by=uploaded_file)
+        drive_service.permissions().create(fileId=filedata['id'], body=permission, fields='').execute()
         googlefile.save()
         return googlefile
 
@@ -190,7 +215,6 @@ class GoogleFile(DynamicFile):
         DOWNLOAD_LOCATION = os.path.join(DOWNLOAD_LOCATION, str(uuid.uuid4()) + self.extension)
         drive_service = self.owned_by.googlecreds.getDrive()
         request = drive_service.files().get_media(fileId=self.gid)
-        # fh = io.BytesIO()
         fh = open(DOWNLOAD_LOCATION, "wb")
         downloader = MediaIoBaseDownload(fh, request)
         done = False
