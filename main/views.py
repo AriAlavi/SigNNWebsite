@@ -14,8 +14,13 @@ from oauth2client.client import flow_from_clientsecrets
 from oauth2client.contrib import xsrfutil
 
 def profile(request):
+    profile = request.user.profile
     context = {
-        "profile" : request.user.profile
+        "profile" : profile,
+        "total_uploads" : GoogleFile.objects.filter(uploaded_by=profile).count() + TempLocalFile.objects.filter(uploaded_by=profile).count() + profile.uploads_denied,
+        "approved_uploads" : GoogleFile.objects.filter(uploaded_by=profile).filter(approved=True).count(),
+        "denied_uploads" : profile.uploads_denied,
+        "total_hosting" : GoogleFile.objects.filter(owned_by=profile).count(),
     }
     return render(request, "main/profile.html", context)
 

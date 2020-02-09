@@ -17,8 +17,10 @@ class Profile(models.Model):
     email = models.EmailField()
     api_allowed = models.BooleanField(default=False)
     view_allowed = models.BooleanField(default=False)
+    uploads_denied = models.PositiveSmallIntegerField(default=0)
 
     folder = models.CharField(max_length=499, null=True, blank=True)
+
     def __str__(self):
         return str(self.user)
 
@@ -41,6 +43,14 @@ class Profile(models.Model):
         if self.email.split("@")[-1] == "ucsb.edu":
             return True
         return False
+
+    @property
+    def has_creds(self):
+        try:
+            self.googlecreds
+            return True
+        except:
+            return False
 
 
         
@@ -103,6 +113,11 @@ class GoogleCreds(models.Model):
         return str(self.profile)
 
 
+class TrainingWord(models.Model):
+    name = models.CharField(unique=True, max_length=63)
+    readonly_fields=('name',)
+
+
 
 class DynamicFile(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, unique=True)
@@ -141,7 +156,9 @@ class TempLocalFile(DynamicFile):
         assert isinstance(givenForm, NewFileForm)
         assert isinstance(uploader, Profile)
         try:
-            result = givenForm.save()
+            result = givenForm.save(commit=False)
+            result.uploaded_by = uploader
+            result.save()
         except Exception as e:
             return "Uploaded file is corrupted. Please try another. Details: {}".format(e)
         return result
@@ -163,6 +180,8 @@ class GoogleFile(DynamicFile):
     name = models.CharField(max_length=99)
     extension = models.CharField(max_length=7)
     gid = models.CharField(max_length=499)
+
+    approved = models.BooleanField(default=False)
     
     @property
     def url(self):
@@ -196,16 +215,16 @@ class GoogleFile(DynamicFile):
         return googlefile
 
     @staticmethod
-    def InitializeTempFile(preDrive, uploader, tag=None):
+    def InitializeTempFile(preDrive, owner, tag=None):
         assert isinstance(preDrive, TempLocalFile)
         name = preDrive.name
         path = preDrive.file.path
         extension = os.path.splitext(path)[1]
-        assert isinstance(uploader, Profile)
+        assert isinstance(owner, Profile)
         assert os.path.isfile(path)
 
         media = MediaFileUpload(path)
-        drive = GoogleFile.InitializeMedia(uploader, media, name, extension, tag)
+        drive = GoogleFile.InitializeMedia(owner, media, name, extension, preDrive.uploaded_by, tag)
         drive.save()
         preDrive.delete()
         return drive

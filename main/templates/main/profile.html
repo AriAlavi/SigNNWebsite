@@ -3,6 +3,35 @@
 {% block content %}
 <h2>{{profile}}</h2>
 
+<ul>
+    <li>You have contributed {{total_uploads}} files in total
+        <ul>
+            <li>{{approved_uploads}} have been approved</li>
+            <li>{{denied_uploads}} have been denied</li>
+        </ul>
+    </li>
+    {% if profile.api_allowed %}
+        {% if profile.googlecreds %}
+            <li>You are also contributing your UCSB Google Drive for training storage
+                <ul>
+                    <li>There are {{total_hosting}} files uploaded to your drive</li>
+                </ul>
+            </li>
+        {% else %}
+            <li>You are also an approved for linking your UCSB Google Drive
+                <ul>
+                    <li>Click here to do so:
+                    <form action="{% url 'add_drive_terms' %}">
+                        <button class="btn button-primary">
+                            Add GDrive to backend
+                        </button>
+                    </form></li>
+                </ul>
+            </li>
+        {% endif %}
+    {% endif %}
+    
+</ul>
 
 
 {% endblock %}

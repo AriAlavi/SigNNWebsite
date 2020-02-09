@@ -9,4 +9,4 @@ class NewProfileForm(ModelForm):
 class NewFileForm(ModelForm):
     class Meta:
         model = TempLocalFile
-        fields = ("__all__")
+        fields = ("name", "file")
