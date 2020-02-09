@@ -3,6 +3,7 @@
 *.json
 *.pem
 static/*
+media/temp_local/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

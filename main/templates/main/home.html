@@ -16,12 +16,17 @@
 
 <script src="{% static 'main/camera.js' %}"></script>
 
-{% if request.user.profile.api_allowed and not request.user.profile.googlecreds %}
-<form action="{% url 'add_drive_terms' %}">
-    <button class="btn button-primary">
-        Add GDrive to backend
+<form method="post" enctype=multipart/form-data>
+
+    {% for x in test_form %}
+        {{ x.errors }}
+        {{x}}<br><hr>
+    {% endfor %}
+    {% csrf_token %}
+    <button class="btn btn-success" type="submit">
+        Submit
     </button>
 </form>
-{% endif %}
+
 
 {% endblock content %}

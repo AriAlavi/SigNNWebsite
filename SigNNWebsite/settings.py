@@ -59,6 +59,9 @@ except:
     HTTP_OR_HTTPS = "http://"
     SECRET_DATA["HTTP_OR_HTTPS"] = HTTP_OR_HTTPS
 
+
+
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -164,14 +167,20 @@ USE_L10N = True
 USE_TZ = True
 
 
+LOGIN_REDIRECT_URL = 'profile'
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
 if SECRET_FILE is not None:
     SECRET_FILE.close()
     SECRET_FILE = open(SECRET_FILE_PATH, "w+")
     json.dump(SECRET_DATA, SECRET_FILE,indent=2)
     SECRET_FILE.close()
+

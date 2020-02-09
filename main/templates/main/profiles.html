@@ -1,0 +1,47 @@
+{% extends "main/base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+<h2>Profiles</h2>
+
+<table class="table table-striped table-bordered">
+    <thead>
+        <th>Username</th>
+        <th>Total files uploaded</th>
+        <th>Total files hosted</th>
+        <th>Total files reviewed</th>
+    </thead>
+    <tbody>
+        {% for profile in stats %}
+        <tr>
+            <td>
+                {{profile.profile.user.username}}
+            </td>
+            <td>
+                {{profile.total_uploads}} ({{profile.approved_uploads}} approved, {{profile.denied_uploads}} denied)
+            </td>
+            <td>
+                {% if profile.profile.api_allowed %}
+                    {{profile.total_hosting}}
+                    {% if not profile.profile.googlecreds %}
+                        (Not linked)
+                    {% endif %}
+                {% else %}
+                    Not permitted
+                {% endif %}
+                
+            </td>
+            <td>
+                {% if profile.profile.verify_allowed %}
+                    {{profile.profile.verification_approvals|add:profile.profile.verification_denials }}
+                    ({{profile.profile.verification_approvals}} approved / {{profile.profile.verification_denials}} denied)
+                {% else %}
+                    Not permitted
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+{% endblock %}
